@@ -1,6 +1,0 @@
-Error: logged error
-    at Object.<anonymous> (/Users/oy/Developer/@onury/jsonc/test/jsonc.spec.ts:393:53)
-    at step (/Users/oy/Developer/@onury/jsonc/test/jsonc.spec.ts:32:23)
-    at Object.next (/Users/oy/Developer/@onury/jsonc/test/jsonc.spec.ts:13:53)
-    at fulfilled (/Users/oy/Developer/@onury/jsonc/test/jsonc.spec.ts:4:58)
-    at <anonymous>
