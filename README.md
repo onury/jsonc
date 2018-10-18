@@ -1,11 +1,12 @@
 # jsonc
 
-[![build-status](https://img.shields.io/travis/onury/jsonc.svg?branch=master)](https://travis-ci.org/onury/jsonc)
-[![npm](http://img.shields.io/npm/v/jsonc.svg)](https://www.npmjs.com/package/jsonc)
-[![release](https://img.shields.io/github/release/onury/jsonc.svg)](https://github.com/onury/jsonc)
-[![dependencies](https://david-dm.org/onury/jsonc.svg)](https://david-dm.org/onury/jsonc)
-[![license](http://img.shields.io/npm/l/jsonc.svg)](https://github.com/onury/jsonc/blob/master/LICENSE)
-[![maintained](https://img.shields.io/maintenance/yes/2018.svg)](https://github.com/onury/jsonc/graphs/punch-card)  
+[![build-status](https://img.shields.io/travis/onury/jsonc.svg?branch=master&style=flat-square)](https://travis-ci.org/onury/jsonc)
+[![coverage-status](https://coveralls.io/repos/github/onury/jsonc/badge.svg?branch=master&style=flat-square)](https://coveralls.io/github/onury/jsonc?branch=master)
+[![npm](http://img.shields.io/npm/v/jsonc.svg?style=flat-square)](https://www.npmjs.com/package/jsonc)
+[![release](https://img.shields.io/github/release/onury/jsonc.svg?style=flat-square)](https://github.com/onury/jsonc)
+[![dependencies](https://david-dm.org/onury/jsonc.svg?style=flat-square)](https://david-dm.org/onury/jsonc)
+[![license](http://img.shields.io/npm/l/jsonc.svg?style=flat-square)](https://github.com/onury/jsonc/blob/master/LICENSE)
+[![maintained](https://img.shields.io/maintenance/yes/2018.svg?style=flat-square)](https://github.com/onury/jsonc/graphs/punch-card)  
 
 > © 2018, Onur Yıldırım ([@onury](https://github.com/onury)). MIT License.
 
@@ -70,7 +71,7 @@ See the concise [API reference][docs-api].
 
 ## Change Log
 
-- **v1.0.0** (2018-10-10)
+- **v1.0.0** (2018-10-18)
     + Initial release.
 
 
