@@ -1,0 +1,8 @@
+/backup/
+/wiki/
+/node_modules/
+/backup/
+/coverage/
+src*.zip
+TODO.md
+ignore*.*

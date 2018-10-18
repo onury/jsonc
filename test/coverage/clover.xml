@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1539879010514" clover="3.2.0">
+  <project timestamp="1539879010515" name="All files">
+    <metrics statements="131" coveredstatements="131" conditionals="62" coveredconditionals="62" methods="46" coveredmethods="46" elements="239" coveredelements="239" complexity="0" loc="131" ncloc="131" packages="1" files="2" classes="2">
+      <file name="helper.ts" path="/Users/oy/Developer/@onury/jsonc/src/helper.ts">
+        <metrics statements="37" coveredstatements="37" conditionals="19" coveredconditionals="19" methods="16" coveredmethods="16"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="15" count="50" type="stmt"/>
+        <line num="16" count="21" type="stmt"/>
+        <line num="17" count="21" type="stmt"/>
+        <line num="18" count="21" type="cond" truecount="2" falsecount="0"/>
+        <line num="19" count="3" type="stmt"/>
+        <line num="21" count="18" type="stmt"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="34" count="1" type="stmt"/>
+        <line num="37" count="38" type="stmt"/>
+        <line num="41" count="12" type="stmt"/>
+        <line num="42" count="12" type="cond" truecount="4" falsecount="0"/>
+        <line num="48" count="12" type="cond" truecount="2" falsecount="0"/>
+        <line num="49" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="50" count="8" type="stmt"/>
+        <line num="54" count="34" type="stmt"/>
+        <line num="55" count="16" type="stmt"/>
+        <line num="56" count="16" type="stmt"/>
+        <line num="57" count="16" type="cond" truecount="2" falsecount="0"/>
+        <line num="58" count="4" type="stmt"/>
+        <line num="59" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="65" count="12" type="stmt"/>
+        <line num="67" count="16" type="stmt"/>
+        <line num="72" count="26" type="cond" truecount="2" falsecount="0"/>
+        <line num="73" count="16" type="stmt"/>
+        <line num="79" count="10" type="cond" truecount="4" falsecount="0"/>
+        <line num="80" count="1" type="stmt"/>
+        <line num="87" count="9" type="stmt"/>
+        <line num="103" count="70" type="stmt"/>
+        <line num="104" count="34" type="stmt"/>
+        <line num="105" count="34" type="stmt"/>
+        <line num="107" count="5" type="stmt"/>
+        <line num="113" count="8" type="stmt"/>
+        <line num="118" count="1" type="stmt"/>
+      </file>
+      <file name="jsonc.ts" path="/Users/oy/Developer/@onury/jsonc/src/jsonc.ts">
+        <metrics statements="94" coveredstatements="94" conditionals="43" coveredconditionals="43" methods="30" coveredmethods="30"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="19" count="1" type="stmt"/>
+        <line num="40" count="1" type="stmt"/>
+        <line num="60" count="1" type="stmt"/>
+        <line num="61" count="17" type="stmt"/>
+        <line num="66" count="17" type="stmt"/>
+        <line num="67" count="17" type="stmt"/>
+        <line num="80" count="4" type="stmt"/>
+        <line num="81" count="4" type="stmt"/>
+        <line num="95" count="4" type="stmt"/>
+        <line num="96" count="4" type="stmt"/>
+        <line num="125" count="1" type="stmt"/>
+        <line num="126" count="37" type="stmt"/>
+        <line num="129" count="37" type="cond" truecount="2" falsecount="0"/>
+        <line num="130" count="37" type="stmt"/>
+        <line num="174" count="1" type="stmt"/>
+        <line num="175" count="22" type="stmt"/>
+        <line num="176" count="22" type="stmt"/>
+        <line num="205" count="26" type="cond" truecount="2" falsecount="0"/>
+        <line num="206" count="18" type="cond" truecount="2" falsecount="0"/>
+        <line num="207" count="14" type="stmt"/>
+        <line num="208" count="14" type="cond" truecount="3" falsecount="0"/>
+        <line num="224" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="225" count="2" type="stmt"/>
+        <line num="244" count="1" type="stmt"/>
+        <line num="245" count="4" type="stmt"/>
+        <line num="269" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="270" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="271" count="8" type="stmt"/>
+        <line num="290" count="1" type="stmt"/>
+        <line num="291" count="4" type="stmt"/>
+        <line num="331" count="1" type="stmt"/>
+        <line num="332" count="7" type="stmt"/>
+        <line num="337" count="7" type="stmt"/>
+        <line num="338" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="339" count="6" type="stmt"/>
+        <line num="364" count="1" type="stmt"/>
+        <line num="365" count="7" type="stmt"/>
+        <line num="370" count="7" type="stmt"/>
+        <line num="371" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="372" count="6" type="stmt"/>
+        <line num="415" count="1" type="stmt"/>
+        <line num="416" count="8" type="stmt"/>
+        <line num="424" count="6" type="stmt"/>
+        <line num="425" count="8" type="stmt"/>
+        <line num="426" count="8" type="stmt"/>
+        <line num="430" count="6" type="stmt"/>
+        <line num="459" count="1" type="stmt"/>
+        <line num="460" count="8" type="stmt"/>
+        <line num="468" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="469" count="8" type="stmt"/>
+        <line num="470" count="8" type="stmt"/>
+        <line num="474" count="6" type="stmt"/>
+        <line num="477" count="1" type="stmt"/>
+        <line num="502" count="1" type="stmt"/>
+        <line num="528" count="1" type="stmt"/>
+        <line num="529" count="8" type="stmt"/>
+        <line num="546" count="4" type="stmt"/>
+        <line num="547" count="4" type="stmt"/>
+        <line num="565" count="4" type="stmt"/>
+        <line num="566" count="4" type="stmt"/>
+        <line num="601" count="1" type="stmt"/>
+        <line num="602" count="16" type="stmt"/>
+        <line num="656" count="1" type="stmt"/>
+        <line num="657" count="4" type="stmt"/>
+        <line num="658" count="4" type="stmt"/>
+        <line num="659" count="4" type="stmt"/>
+        <line num="661" count="1" type="stmt"/>
+        <line num="695" count="17" type="cond" truecount="2" falsecount="0"/>
+        <line num="696" count="9" type="stmt"/>
+        <line num="717" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="718" count="2" type="stmt"/>
+        <line num="743" count="1" type="stmt"/>
+        <line num="744" count="2" type="stmt"/>
+        <line num="773" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="774" count="4" type="stmt"/>
+        <line num="802" count="1" type="stmt"/>
+        <line num="803" count="2" type="stmt"/>
+        <line num="850" count="1" type="stmt"/>
+        <line num="851" count="4" type="stmt"/>
+        <line num="880" count="1" type="stmt"/>
+        <line num="881" count="4" type="stmt"/>
+        <line num="935" count="1" type="stmt"/>
+        <line num="936" count="4" type="stmt"/>
+        <line num="972" count="1" type="stmt"/>
+        <line num="973" count="4" type="stmt"/>
+        <line num="975" count="1" type="stmt"/>
+        <line num="978" count="1" type="stmt"/>
+        <line num="987" count="2" type="stmt"/>
+      </file>
+    </metrics>
+  </project>
+</coverage>

@@ -1,0 +1,98 @@
+{
+  "name": "jsonc",
+  "version": "1.0.0",
+  "description": "Everything you need in JSON land. Parse JSON with comments, stringify objects with circular references, etc...",
+  "author": "Onur Yıldırım <onur@cutepilot.com>",
+  "license": "MIT",
+  "repository": "onury/jsonc",
+  "main": "index.js",
+  "files": [
+    "lib",
+    "index.js",
+    "LICENSE"
+  ],
+  "types": "./lib/jsonc.d.ts",
+  "scripts": {
+    "clean": "rimraf ./lib",
+    "build": "npm run clean && npm run cover && mkdirp ./lib && tsc",
+    "test": "jest --verbose --no-cache",
+    "cover": "jest --coverage --verbose --no-cache",
+    "coveralls": "cat ./test/coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js -v",
+    "report": "open ./test/coverage/lcov-report/index.html",
+    "docs": "docma -c ./docma.config.json"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "globals": {
+      "ts-jest": {
+        "diagnostics": false
+      }
+    },
+    "roots": [
+      "<rootDir>/src",
+      "<rootDir>/lib",
+      "<rootDir>/test"
+    ],
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/test/.*|(\\.|/)(test|spec))\\.tsx?$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "testPathIgnorePatterns": [
+      "/backup/",
+      "/helpers/",
+      "/coverage/"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/interfaces.ts"
+    ],
+    "coverageDirectory": "./test/coverage"
+  },
+  "keywords": [
+    "json",
+    "object",
+    "notation",
+    "safe",
+    "stringify",
+    "parse",
+    "read-file",
+    "write-file",
+    "comments",
+    "circular",
+    "cyclic",
+    "console",
+    "log",
+    "uglify",
+    "beautify",
+    "typescript"
+  ],
+  "dependencies": {
+    "fast-safe-stringify": "^2.0.6",
+    "graceful-fs": "^4.1.11",
+    "mkdirp": "^0.5.1",
+    "parse-json": "^4.0.0",
+    "strip-bom": "^3.0.0",
+    "strip-json-comments": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.5",
+    "@types/mkdirp": "^0.5.2",
+    "@types/node": "^10.12.0",
+    "@types/parse-json": "^4.0.0",
+    "@types/strip-bom": "^3.0.0",
+    "@types/strip-json-comments": "0.0.30",
+    "coveralls": "^3.0.2",
+    "docma": "^2.1.0",
+    "jest": "^23.6.0",
+    "jest-cli": "^23.6.0",
+    "rimraf": "^2.6.2",
+    "ts-jest": "^23.10.4",
+    "typescript": "^3.1.3"
+  }
+}
