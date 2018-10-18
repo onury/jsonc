@@ -1,7 +1,7 @@
 # jsonc
 
 [![build-status](https://img.shields.io/travis/onury/jsonc.svg?branch=master&style=flat-square)](https://travis-ci.org/onury/jsonc)
-[![coverage-status](https://coveralls.io/repos/github/onury/jsonc/badge.svg?branch=master&style=flat-square)](https://coveralls.io/github/onury/jsonc?branch=master)
+[![coverage-status](https://img.shields.io/coveralls/github/onury/jsonc/master.svg?style=flat-square)](https://coveralls.io/github/onury/jsonc?branch=master)
 [![npm](http://img.shields.io/npm/v/jsonc.svg?style=flat-square)](https://www.npmjs.com/package/jsonc)
 [![release](https://img.shields.io/github/release/onury/jsonc.svg?style=flat-square)](https://github.com/onury/jsonc)
 [![dependencies](https://david-dm.org/onury/jsonc.svg?style=flat-square)](https://david-dm.org/onury/jsonc)
