@@ -1,10 +1,14 @@
+/* tslint:disable:no-require-imports */
+
 // core modules
 import * as path from 'path';
 
 // dep modules
 import * as fs from 'graceful-fs';
 import * as mkdirp from 'mkdirp';
-import rimraf from 'rimraf';
+
+// @ts-ignore
+const rimraf = require('rimraf');
 
 export const streamLog = (jsonc: any, logMethod: string, msgList: any[]) => {
 
