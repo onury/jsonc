@@ -2,7 +2,8 @@
 /wiki/
 /node_modules/
 /backup/
-/coverage/
+/test/coverage/
+/test/tmp/
 src*.zip
 TODO.md
 ignore*.*
