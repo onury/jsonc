@@ -4,6 +4,7 @@
   "description": "Everything you need in JSON land. Parse JSON with comments, stringify objects with circular references, etc...",
   "author": "Onur Yıldırım <onur@cutepilot.com>",
   "license": "MIT",
+  "homepage": "https://onury.io/jsonc",
   "repository": "onury/jsonc",
   "main": "index.js",
   "files": [
@@ -19,7 +20,7 @@
     "cover": "jest --coverage --verbose --no-cache",
     "coveralls": "cat ./test/coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js -v",
     "report": "open ./test/coverage/lcov-report/index.html",
-    "docs": "docma -c ./docma.config.json"
+    "docs": "docma -c ./docma.json"
   },
   "jest": {
     "testEnvironment": "node",
