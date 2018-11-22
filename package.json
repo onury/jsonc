@@ -75,25 +75,25 @@
   ],
   "dependencies": {
     "fast-safe-stringify": "^2.0.6",
-    "graceful-fs": "^4.1.11",
+    "graceful-fs": "^4.1.15",
     "mkdirp": "^0.5.1",
     "parse-json": "^4.0.0",
     "strip-bom": "^3.0.0",
     "strip-json-comments": "^2.0.1"
   },
   "devDependencies": {
-    "@types/jest": "^23.3.5",
+    "@types/jest": "^23.3.9",
     "@types/mkdirp": "^0.5.2",
-    "@types/node": "^10.12.0",
+    "@types/node": "^10.12.10",
     "@types/parse-json": "^4.0.0",
     "@types/strip-bom": "^3.0.0",
     "@types/strip-json-comments": "0.0.30",
     "coveralls": "^3.0.2",
-    "docma": "^2.1.0",
+    "docma": "^3.0.0",
     "jest": "^23.6.0",
     "jest-cli": "^23.6.0",
     "rimraf": "^2.6.2",
     "ts-jest": "^23.10.4",
-    "typescript": "^3.1.3"
+    "typescript": "^3.1.6"
   }
 }
