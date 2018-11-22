@@ -71,6 +71,12 @@ See the concise [API reference][docs-api].
 
 ## Change Log
 
+- **v1.1.0** (2018-11-22)
+- Fixed an issue where TypeScript compiler would complain about `'declare' modifier`.
+- Improved typings for safe methods.
+- Updated core dependencies.
+
+
 - **v1.0.0** (2018-10-18)
     + Initial release.
 
