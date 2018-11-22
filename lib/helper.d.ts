@@ -13,7 +13,7 @@ declare const helper: {
         writeFile: any;
         mkdirp: any;
     };
-    safeSync(fn: any): any;
-    safeAsync(promise: Promise<any>): Promise<any>;
+    safeSync<T, U = any>(fn: (...args: any[]) => T): (...args: any[]) => [U, T];
+    safeAsync<T, U = any>(promise: Promise<T>): Promise<[U, T]>;
 };
 export { helper };
