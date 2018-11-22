@@ -99,18 +99,20 @@ const helper = {
         mkdirp: promisify(mkdirp)
     },
 
-    safeSync(fn: any): any {
-        return (...args): [Error] | [null, any] => {
+    safeSync<T, U = any>(fn: (...args: any[]) => T): (...args: any[]) => [U | null, T | undefined] {
+        return (...args: any[]): [U | null, T | undefined] => {
             try {
-                return [null, fn(...args)];
+                return [null, fn(...args) as T];
             } catch (err) {
-                return [err];
+                return [err, undefined] as [U, undefined];
             }
         };
     },
 
-    safeAsync(promise: Promise<any>): Promise<any> {
-        return promise.then(data => [null, data]).catch(err => [err]);
+    safeAsync<T, U = any>(promise: Promise<T>): Promise<[U | null, T | undefined]> {
+        return promise
+            .then<[null, T]>((data: T) => [null, data])
+            .catch<[U, undefined]>(err => [err, undefined]);
     }
 
 };
