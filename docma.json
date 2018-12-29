@@ -42,7 +42,7 @@
         "options": {
             "title": {
                 "label": "jsonc",
-                "href": "/jsonc/?"
+                "href": "/jsonc/"
             },
             "logo": null,                   // URL String or { dark: String, light: String }
             "sidebar": {
@@ -55,7 +55,7 @@
                 "badges": true,             // true | false | <string-value>
                 "search": true,
                 "animations": true
-                },
+            },
             "symbols": {
                 "autoLink": true,           // "internal" | "external" | true (both)
                 "params": "list",           // "list" | "table"
