@@ -71,6 +71,11 @@ See the concise [API reference][docs-api].
 
 ## Change Log
 
+- **v2.0.0** (2019-06-17)
+    + Requires Node.js v8 or newer.
+    + Updated dependencies.
+
+
 - **v1.1.0** (2018-11-22)
     + Fixed an issue where TypeScript compiler would complain about `'declare' modifier`.
     + Improved typings for safe methods.
