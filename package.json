@@ -1,6 +1,6 @@
 {
   "name": "jsonc",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Everything you need in JSON land. Parse JSON with comments, stringify objects with circular references, etc...",
   "author": "Onur Yıldırım <onur@cutepilot.com>",
   "license": "MIT",
