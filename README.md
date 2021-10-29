@@ -4,11 +4,9 @@
 [![coverage-status](https://img.shields.io/coveralls/github/onury/jsonc/master.svg?style=flat-square)](https://coveralls.io/github/onury/jsonc?branch=master)
 [![npm](http://img.shields.io/npm/v/jsonc.svg?style=flat-square)](https://www.npmjs.com/package/jsonc)
 [![release](https://img.shields.io/github/release/onury/jsonc.svg?style=flat-square)](https://github.com/onury/jsonc)
-[![dependencies](https://david-dm.org/onury/jsonc.svg?style=flat-square)](https://david-dm.org/onury/jsonc)
 [![license](http://img.shields.io/npm/l/jsonc.svg?style=flat-square)](https://github.com/onury/jsonc/blob/master/LICENSE)
-[![maintained](https://img.shields.io/maintenance/yes/2019.svg?style=flat-square)](https://github.com/onury/jsonc/graphs/punch-card)  
 
-> © 2019, Onur Yıldırım ([@onury](https://github.com/onury)). MIT License.
+> © 2021, Onur Yıldırım ([@onury](https://github.com/onury)). MIT License.
 
 Everything you need in JSON land.
 
