@@ -149,6 +149,7 @@ class jsonc {
    *
    * @param str - JSON string to be parsed.
    * @param options - Either a parse options object or a reviver function.
+   * @typeParam T - Type of the parsed value; `any` by default. Not validated at runtime.
    * @returns The parsed value.
    * @throws `JSONError` (from `parse-json`) if the string is not valid JSON. Comments are stripped
    * by default, so this does not throw for comments unless `stripComments` is `false`. Comments are
@@ -161,10 +162,10 @@ class jsonc {
    * jsonc.parse('{"a":[1,2,],}', { allowTrailingCommas: true }); // { a: [1, 2] }
    * ```
    */
-  static parse(str: string, options?: IParseOptions | Reviver): any {
+  static parse<T = any>(str: string, options?: IParseOptions | Reviver): T {
     const opts: IParseOptions =
       typeof options === 'function' ? { reviver: options } : { ...options };
-    return parseJson(prepare(str, opts), opts.reviver);
+    return parseJson(prepare(str, opts), opts.reviver) as T;
   }
 
   /**
@@ -288,6 +289,7 @@ class jsonc {
    *
    * @param value - Value to be normalized.
    * @param replacer - Determines how object values are normalized.
+   * @typeParam T - Type of the normalized value; `any` by default. Not validated at runtime.
    * @returns The normalized value.
    *
    * @example
@@ -297,7 +299,7 @@ class jsonc {
    * jsonc.normalize(c).constructor.name;  // 'Object'
    * ```
    */
-  static normalize(value: any, replacer?: Replacer | null): any {
+  static normalize<T = any>(value: any, replacer?: Replacer | null): T {
     return jsonc.parse(jsonc.stringify(value, { replacer }));
   }
 
@@ -306,6 +308,7 @@ class jsonc {
    *
    * @param filePath - Path to the JSON file.
    * @param options - Read options.
+   * @typeParam T - Type of the parsed content; `any` by default. Not validated at runtime.
    * @returns A promise of the parsed content.
    *
    * @example
@@ -317,7 +320,7 @@ class jsonc {
    * }
    * ```
    */
-  static async read(filePath: string, options?: IReadOptions): Promise<any> {
+  static async read<T = any>(filePath: string, options?: IReadOptions): Promise<T> {
     const data = await readFileAsync(filePath, 'utf8');
     return readContent(data, filePath, options);
   }
@@ -327,6 +330,7 @@ class jsonc {
    *
    * @param filePath - Path to the JSON file.
    * @param options - Read options.
+   * @typeParam T - Type of the parsed content; `any` by default. Not validated at runtime.
    * @returns The parsed content.
    *
    * @example
@@ -335,7 +339,7 @@ class jsonc {
    * const obj = jsonc.readSync('path/to/file.json');
    * ```
    */
-  static readSync(filePath: string, options?: IReadOptions): any {
+  static readSync<T = any>(filePath: string, options?: IReadOptions): T {
     return readContent(fs.readFileSync(filePath, 'utf8'), filePath, options);
   }
 

@@ -74,8 +74,8 @@ class jsoncSafe {
    * if (err) console.log(`Failed to parse JSON: ${err.message}`);
    * ```
    */
-  static parse(str: string, options?: IParseOptions | Reviver): SafeResult<any> {
-    return safeSync(jsonc.parse)(str, options);
+  static parse<T = any>(str: string, options?: IParseOptions | Reviver): SafeResult<T> {
+    return safeSync(jsonc.parse<T>)(str, options);
   }
 
   /**
@@ -159,8 +159,8 @@ class jsoncSafe {
    * @param replacer - Determines how object values are normalized.
    * @returns `[err, undefined]` on failure, `[null, value]` on success.
    */
-  static normalize(value: any, replacer?: Replacer | null): SafeResult<any> {
-    return safeSync(jsonc.normalize)(value, replacer);
+  static normalize<T = any>(value: any, replacer?: Replacer | null): SafeResult<T> {
+    return safeSync(jsonc.normalize<T>)(value, replacer);
   }
 
   /**
@@ -178,8 +178,8 @@ class jsoncSafe {
    * if (err) console.log('Failed to read JSON file');
    * ```
    */
-  static read(filePath: string, options?: IReadOptions): Promise<SafeResult<any>> {
-    return safeAsync(jsonc.read(filePath, options));
+  static read<T = any>(filePath: string, options?: IReadOptions): Promise<SafeResult<T>> {
+    return safeAsync(jsonc.read<T>(filePath, options));
   }
 
   /**
@@ -189,8 +189,8 @@ class jsoncSafe {
    * @param options - Read options.
    * @returns `[err, undefined]` on failure, `[null, value]` on success.
    */
-  static readSync(filePath: string, options?: IReadOptions): SafeResult<any> {
-    return safeSync(jsonc.readSync)(filePath, options);
+  static readSync<T = any>(filePath: string, options?: IReadOptions): SafeResult<T> {
+    return safeSync(jsonc.readSync<T>)(filePath, options);
   }
 
   /**

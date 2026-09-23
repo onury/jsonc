@@ -9,6 +9,7 @@ import jsoncDefault, {
   type IReadOptions,
   type IWriteOptions,
   jsonc,
+  type SafeResult,
   safe
 } from '../src/index.js';
 
@@ -310,6 +311,27 @@ describe('file I/O', () => {
     await expect(jsonc.read(file, { stripComments: false })).rejects.toThrow(file);
     expect(() => jsonc.readSync(file, { stripComments: false })).toThrow(file);
     expect(() => jsonc.readSync(path.join(tmpDir, 'none.json'))).toThrow(/ENOENT/);
+  });
+});
+
+describe('typings', () => {
+  interface IConf {
+    a: number;
+  }
+
+  test('generic return types', async () => {
+    const file = path.join(tmpDir, 'conf.json');
+    jsonc.writeSync(file, { a: 1 });
+    expectTypeOf(jsonc.parse('{}')).toBeAny();
+    expectTypeOf(jsonc.parse<IConf>('{"a":1}')).toEqualTypeOf<IConf>();
+    expectTypeOf(jsonc.normalize<IConf>({ a: 1 })).toEqualTypeOf<IConf>();
+    expectTypeOf(jsonc.readSync<IConf>(file)).toEqualTypeOf<IConf>();
+    expectTypeOf(jsonc.read<IConf>(file)).toEqualTypeOf<Promise<IConf>>();
+    expectTypeOf(safe.parse<IConf>('{"a":1}')).toEqualTypeOf<SafeResult<IConf>>();
+    expectTypeOf(safe.normalize<IConf>({ a: 1 })).toEqualTypeOf<SafeResult<IConf>>();
+    expectTypeOf(safe.readSync<IConf>(file)).toEqualTypeOf<SafeResult<IConf>>();
+    expectTypeOf(safe.read<IConf>(file)).toEqualTypeOf<Promise<SafeResult<IConf>>>();
+    expect((await jsonc.read<IConf>(file)).a).toBe(1);
   });
 });
 
