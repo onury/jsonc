@@ -62,7 +62,6 @@
   ],
   "dependencies": {
     "fast-safe-stringify": "^2.1.1",
-    "graceful-fs": "^4.2.11",
     "parse-json": "^8.3.0",
     "strip-json-comments": "^5.0.3"
   },
@@ -73,7 +72,6 @@
     "@biomejs/biome": "^2.5.14",
     "@stryker-mutator/core": "^10.0.0",
     "@stryker-mutator/vitest-runner": "^10.0.0",
-    "@types/graceful-fs": "^4.1.9",
     "@types/node": "^26.6.2",
     "@vitest/coverage-istanbul": "^4.1.11",
     "biome-config-oy": "^1.1.0",

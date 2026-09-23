@@ -1,9 +1,5 @@
-// core modules
-import { promisify } from 'node:util';
-
 // dep modules
 import fss from 'fast-safe-stringify';
-import fs from 'graceful-fs';
 
 // own modules
 import type { IConfig, IStringifyOptions, Replacer, SafeResult } from './types.js';
@@ -26,10 +22,6 @@ export function circularStringify(value: any, replacer?: any, space?: string | n
   const out = fastSafeStringify(value, replacer, space);
   return out === UNSERIALIZABLE ? JSON.stringify(value, replacer, space) : out;
 }
-
-export const readFileAsync = promisify(fs.readFile);
-export const writeFileAsync = promisify(fs.writeFile);
-export const mkdirAsync = promisify(fs.mkdir);
 
 export function isObject(o: any): boolean {
   return Object.prototype.toString.call(o) === '[object Object]';

@@ -60,6 +60,17 @@ describe('exports', () => {
   });
 });
 
+describe('package', () => {
+  test('runtime dependencies', () => {
+    const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+    expect(Object.keys(pkg.dependencies).sort()).toEqual([
+      'fast-safe-stringify',
+      'parse-json',
+      'strip-json-comments'
+    ]);
+  });
+});
+
 describe('jsonc.parse()', () => {
   test('strips comments by default', () => {
     expect(jsonc.parse(withComments)).toEqual({ some: 'property', value: 1 });

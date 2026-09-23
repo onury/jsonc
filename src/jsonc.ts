@@ -1,22 +1,14 @@
 // core modules
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
 import path from 'node:path';
 
 // dep modules
-import fs from 'graceful-fs';
 import parseJson from 'parse-json';
 import stripJsonComments from 'strip-json-comments';
 
 // own modules
-import {
-  circularStringify,
-  getLogger,
-  getStringifyOptions,
-  isObject,
-  mkdirAsync,
-  readFileAsync,
-  stripBOM,
-  writeFileAsync
-} from './helper.js';
+import { circularStringify, getLogger, getStringifyOptions, isObject, stripBOM } from './helper.js';
 import type { jsoncSafe } from './jsonc.safe.js';
 import type {
   IConfig,
@@ -321,7 +313,7 @@ class jsonc {
    * ```
    */
   static async read<T = any>(filePath: string, options?: IReadOptions): Promise<T> {
-    const data = await readFileAsync(filePath, 'utf8');
+    const data = await fsp.readFile(filePath, 'utf8');
     return readContent(data, filePath, options);
   }
 
@@ -360,8 +352,8 @@ class jsonc {
    */
   static async write(filePath: string, data: any, options?: IWriteOptions): Promise<true> {
     const opts: IWriteOptions = { mode: 0o666, autoPath: true, ...options };
-    if (opts.autoPath) await mkdirAsync(path.dirname(filePath), { recursive: true });
-    await writeFileAsync(filePath, writeContent(data, opts), { mode: opts.mode });
+    if (opts.autoPath) await fsp.mkdir(path.dirname(filePath), { recursive: true });
+    await fsp.writeFile(filePath, writeContent(data, opts), { mode: opts.mode });
     return true;
   }
 
