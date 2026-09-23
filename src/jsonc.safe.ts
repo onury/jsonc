@@ -1,5 +1,5 @@
 // own modules
-import { fastSafeStringify, getStringifyOptions, safeAsync, safeSync } from './helper.js';
+import { safeAsync, safeSync } from './helper.js';
 import { jsonc } from './jsonc.js';
 import type {
   IConfig,
@@ -79,8 +79,8 @@ class jsoncSafe {
   }
 
   /**
-   * Safe version of {@link jsonc.stringify}. Circular references are always replaced with the
-   * string `"[Circular]"` here, regardless of the `handleCircular` option.
+   * Safe version of {@link jsonc.stringify}. Circular references are replaced with the string
+   * `"[Circular]"` unless `handleCircular` is `false`; in which case they result in an error.
    *
    * @param value - Value to be stringified.
    * @param optionsOrReplacer - Stringify options, or a replacer (function or allow-list array).
@@ -106,8 +106,7 @@ class jsoncSafe {
     optionsOrReplacer?: IStringifyOptions | Replacer | null,
     space?: string | number
   ): SafeResult<string> {
-    const opts = getStringifyOptions(optionsOrReplacer, space);
-    return safeSync(fastSafeStringify)(value, opts.replacer as any, opts.space);
+    return safeSync(jsonc.stringify)(value, optionsOrReplacer, space);
   }
 
   /**

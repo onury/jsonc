@@ -341,7 +341,9 @@ describe('jsonc.safe', () => {
     expect(safe.stringify(o, { space: 1 })).toEqual([null, '{\n "a": 1,\n "b": "text"\n}']);
     const expected = '{"a":1,"b":"text","y":"[Circular]"}';
     expect(safe.stringify(circular())).toEqual([null, expected]);
-    expect(safe.stringify(circular(), { handleCircular: false })).toEqual([null, expected]);
+    const [cErr, cStr] = safe.stringify(circular(), { handleCircular: false });
+    expect(cErr).toBeInstanceOf(TypeError);
+    expect(cStr).toBeUndefined();
 
     const throwing = {
       get error(): any {
