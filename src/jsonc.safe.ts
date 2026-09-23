@@ -209,7 +209,7 @@ class jsoncSafe {
    * if (err) console.log('Failed to write JSON file');
    * ```
    */
-  static write(filePath: string, data: any, options?: IWriteOptions): Promise<SafeResult<boolean>> {
+  static write(filePath: string, data: any, options?: IWriteOptions): Promise<SafeResult<true>> {
     return safeAsync(jsonc.write(filePath, data, options));
   }
 
@@ -221,7 +221,7 @@ class jsoncSafe {
    * @param options - Write options.
    * @returns `[err, undefined]` on failure, `[null, true]` on success.
    */
-  static writeSync(filePath: string, data: any, options?: IWriteOptions): SafeResult<boolean> {
+  static writeSync(filePath: string, data: any, options?: IWriteOptions): SafeResult<true> {
     return safeSync(jsonc.writeSync)(filePath, data, options);
   }
 }

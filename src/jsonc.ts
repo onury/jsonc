@@ -358,7 +358,7 @@ class jsonc {
    * await jsonc.write('path/to/file.json', { key: 'value' }, { space: 2 });
    * ```
    */
-  static async write(filePath: string, data: any, options?: IWriteOptions): Promise<boolean> {
+  static async write(filePath: string, data: any, options?: IWriteOptions): Promise<true> {
     const opts: IWriteOptions = { mode: 0o666, autoPath: true, ...options };
     if (opts.autoPath) await mkdirAsync(path.dirname(filePath), { recursive: true });
     await writeFileAsync(filePath, writeContent(data, opts), { mode: opts.mode });
@@ -381,7 +381,7 @@ class jsonc {
    * jsonc.writeSync('path/to/file.json', { key: 'value' });
    * ```
    */
-  static writeSync(filePath: string, data: any, options?: IWriteOptions): boolean {
+  static writeSync(filePath: string, data: any, options?: IWriteOptions): true {
     const opts: IWriteOptions = { mode: 0o666, autoPath: true, ...options };
     if (opts.autoPath) fs.mkdirSync(path.dirname(filePath), { recursive: true });
     fs.writeFileSync(filePath, writeContent(data, opts), { mode: opts.mode });

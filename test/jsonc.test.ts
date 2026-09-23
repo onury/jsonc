@@ -333,6 +333,13 @@ describe('typings', () => {
     expectTypeOf(safe.read<IConf>(file)).toEqualTypeOf<Promise<SafeResult<IConf>>>();
     expect((await jsonc.read<IConf>(file)).a).toBe(1);
   });
+
+  test('write() / writeSync() return true', () => {
+    expectTypeOf(jsonc.write).returns.toEqualTypeOf<Promise<true>>();
+    expectTypeOf(jsonc.writeSync).returns.toEqualTypeOf<true>();
+    expectTypeOf(safe.write).returns.toEqualTypeOf<Promise<SafeResult<true>>>();
+    expectTypeOf(safe.writeSync).returns.toEqualTypeOf<SafeResult<true>>();
+  });
 });
 
 describe('jsonc.config() / log() / logp()', () => {
