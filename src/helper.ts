@@ -32,8 +32,9 @@ export function stripBOM(str: string): string {
 }
 
 export function strLog(value: any, pretty: boolean): string {
+  // primitives are logged as is; `null` goes through stringify, which yields `'null'` as well.
   const t = typeof value;
-  if (t !== 'object' && t !== 'function') return value;
+  if (t !== 'object' && t !== 'function') return String(value);
   return fastSafeStringify(value, undefined, pretty ? 2 : undefined);
 }
 

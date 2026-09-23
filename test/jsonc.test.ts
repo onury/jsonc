@@ -247,7 +247,7 @@ describe('jsonc.config() / log() / logp()', () => {
     jsonc.config({ stream });
     jsonc.log({ test: true });
     jsonc.log([1, 2, 3], 'str', 5);
-    jsonc.log(true, null, 1n);
+    jsonc.log(true, null, undefined, Symbol('s'), 1n);
     jsonc.log(circular());
     jsonc.log(() => 1);
     jsonc.logp({ test: true });
@@ -256,7 +256,7 @@ describe('jsonc.config() / log() / logp()', () => {
     expect(out).toEqual([
       '{"test":true}\n',
       '[1,2,3] str 5\n',
-      'true null 1\n',
+      'true null undefined Symbol(s) 1\n',
       '{"a":1,"b":"text","y":"[Circular]"}\n',
       '\n',
       '{\n  "test": true\n}\n',
