@@ -75,6 +75,12 @@ class jsonc {
    */
   declare static safe: typeof jsoncSafe;
 
+  /**
+   * Self-reference, so that `const { jsonc } = require('jsonc')` works as well as
+   * `const jsonc = require('jsonc')`.
+   */
+  declare static jsonc: typeof jsonc;
+
   private static _loggers: ILoggers = createLoggers();
 
   /**

@@ -51,11 +51,11 @@ describe('exports', () => {
   test('named, default and safe exports', async () => {
     expect(jsoncDefault).toBe(jsonc);
     expect(jsonc.safe).toBe(safe);
-    expect(Object.keys(await import('../src/index.js')).sort()).toEqual([
-      'default',
-      'jsonc',
-      'safe'
-    ]);
+    const ns: Record<string, unknown> = await import('../src/index.js');
+    expect(Object.keys(ns).sort()).toEqual(['default', 'jsonc', 'module.exports', 'safe']);
+    // what require('jsonc') returns: jsonc itself, with the v2 self-references
+    expect(ns['module.exports']).toBe(jsonc);
+    expect(jsonc.jsonc).toBe(jsonc);
   });
 });
 
