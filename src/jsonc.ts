@@ -146,7 +146,8 @@ class jsonc {
    * @param options - Either a parse options object or a reviver function.
    * @returns The parsed value.
    * @throws `JSONError` (from `parse-json`) if the string is not valid JSON. Comments are stripped
-   * by default, so this does not throw for comments unless `stripComments` is `false`.
+   * by default, so this does not throw for comments unless `stripComments` is `false`. Comments are
+   * replaced with whitespace, so the position in the error message points into the given string.
    *
    * @example
    * ```ts
@@ -157,7 +158,7 @@ class jsonc {
   static parse(str: string, options?: IParseOptions | Reviver): any {
     const opts: IParseOptions =
       typeof options === 'function' ? { reviver: options } : { ...options };
-    if (opts.stripComments !== false) str = stripJsonComments(str, { whitespace: false });
+    if (opts.stripComments !== false) str = stripJsonComments(str);
     return parseJson(str, opts.reviver);
   }
 

@@ -70,8 +70,12 @@ describe('jsonc.parse()', () => {
     expect(jsonc.parse('{"a":1}', { stripComments: false })).toEqual({ a: 1 });
   });
 
-  test('strips comments without whitespace (error positions refer to the stripped string)', () => {
-    expect(() => jsonc.parse('/*c*/{')).toThrow(/position 1 /);
+  test('error positions point into the source string, comments included', () => {
+    expect(() => jsonc.parse('/*c*/{')).toThrow(/position 6 \(line 1 column 7\)/);
+    // the stray trailing comma: index 19, line 2, column 9 of the source
+    const src = '// comment\n{"a": 1,}';
+    expect(src.indexOf('}')).toBe(19);
+    expect(() => jsonc.parse(src)).toThrow(/position 19 \(line 2 column 9\)/);
   });
 
   test('accepts a reviver function or options.reviver', () => {
