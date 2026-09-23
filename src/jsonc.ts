@@ -52,7 +52,8 @@ function readContent(data: string, filePath: string, options?: IReadOptions): an
 }
 
 function writeContent(data: any, options: IWriteOptions): string {
-  return `${JSON.stringify(data, options.replacer as any, options.space)}\n`;
+  const { replacer, space, handleCircular } = options;
+  return `${jsonc.stringify(data, { replacer, space, handleCircular })}\n`;
 }
 
 /**
@@ -189,7 +190,7 @@ class jsonc {
     space?: string | number
   ): string {
     const opts = getStringifyOptions(optionsOrReplacer, space);
-    return opts.handleCircular
+    return opts.handleCircular !== false
       ? fastSafeStringify(value, opts.replacer as any, opts.space)
       : JSON.stringify(value, opts.replacer as any, opts.space);
   }
@@ -334,7 +335,8 @@ class jsonc {
 
   /**
    * Asynchronously stringifies the given value and writes it to a JSON file (with a trailing
-   * newline). Parent directories are created by default.
+   * newline). Parent directories are created by default. As with {@link jsonc.stringify},
+   * circular references are replaced with `"[Circular]"` unless `handleCircular` is `false`.
    *
    * @param filePath - Path to the JSON file to be written.
    * @param data - Value to be stringified into JSON.
@@ -355,7 +357,8 @@ class jsonc {
 
   /**
    * Synchronously stringifies the given value and writes it to a JSON file (with a trailing
-   * newline). Parent directories are created by default.
+   * newline). Parent directories are created by default. As with {@link jsonc.stringify},
+   * circular references are replaced with `"[Circular]"` unless `handleCircular` is `false`.
    *
    * @param filePath - Path to the JSON file to be written.
    * @param data - Value to be stringified into JSON.

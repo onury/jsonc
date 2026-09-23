@@ -196,6 +196,22 @@ describe('file I/O', () => {
     expect(fs.readFileSync(file, 'utf8')).toBe('{"x":1}\n');
   });
 
+  test('write() / writeSync() handle circular references unless handleCircular is false', async () => {
+    const expected = '{"a":1,"b":"text","y":"[Circular]"}\n';
+    const file = path.join(tmpDir, 'circular.json');
+    await expect(jsonc.write(file, circular())).resolves.toBe(true);
+    expect(fs.readFileSync(file, 'utf8')).toBe(expected);
+    await expect(jsonc.write(file, circular(), { handleCircular: false })).rejects.toThrow(
+      TypeError
+    );
+    const fileSync = path.join(tmpDir, 'circular-sync.json');
+    expect(jsonc.writeSync(fileSync, circular(), { space: 0 })).toBe(true);
+    expect(fs.readFileSync(fileSync, 'utf8')).toBe(expected);
+    expect(() => jsonc.writeSync(fileSync, circular(), { handleCircular: false })).toThrow(
+      TypeError
+    );
+  });
+
   test('write() rejects when autoPath is false and the directory is missing', async () => {
     const file = path.join(tmpDir, 'missing', 'test.json');
     await expect(jsonc.write(file, data, { autoPath: false })).rejects.toThrow(/ENOENT/);

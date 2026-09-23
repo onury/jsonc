@@ -17,12 +17,6 @@ export const readFileAsync = promisify(fs.readFile);
 export const writeFileAsync = promisify(fs.writeFile);
 export const mkdirAsync = promisify(fs.mkdir);
 
-const defaultStringifyOpts: IStringifyOptions = {
-  replacer: null,
-  space: 0,
-  handleCircular: true
-};
-
 export function isObject(o: any): boolean {
   return Object.prototype.toString.call(o) === '[object Object]';
 }
@@ -58,9 +52,9 @@ export function getStringifyOptions(
   options?: IStringifyOptions | Replacer | null,
   space?: string | number
 ): IStringifyOptions {
-  if (isObject(options)) return { ...defaultStringifyOpts, ...(options as IStringifyOptions) };
+  if (isObject(options)) return options as IStringifyOptions;
   // anything else is the replacer of the native signature; JSON.stringify ignores invalid ones.
-  return { ...defaultStringifyOpts, replacer: options as Replacer | null, space };
+  return { replacer: options as Replacer | null, space };
 }
 
 export function safeSync<A extends any[], T>(fn: (...args: A) => T): (...args: A) => SafeResult<T> {

@@ -54,6 +54,11 @@ export interface IWriteOptions {
   replacer?: Replacer | null;
   /** Indentation of nested structures. Omit for packed output. */
   space?: string | number;
+  /**
+   * Whether to handle circular references by replacing their values with the string
+   * `"[Circular]"`. Writing throws for circular references if this is `false`. Default: `true`
+   */
+  handleCircular?: boolean;
 }
 
 /** Configuration for the `log()` / `logp()` methods. */
