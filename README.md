@@ -21,7 +21,7 @@ npm i jsonc
 
 ## Features
 
-- Parse JSON with **comments**.
+- Parse JSON with **comments** (and optionally, **trailing commas**).
 - Stringify objects with **circular** references.
 - **Safely** parse / stringify without try/catch blocks.
 - **Read** and auto-parse JSON files, sync or async (with promises).
@@ -38,6 +38,9 @@ npm i jsonc
 import { jsonc } from 'jsonc';
 // or the default export
 import jsonc from 'jsonc';
+
+// CommonJS (Node.js 22.12 or newer)
+const jsonc = require('jsonc');
 ```
 
 This is safe for JSON with comments:
@@ -69,18 +72,24 @@ if (err) {
 ```
 
 > [!NOTE]
-> Since v3 this package is ESM-only. On Node.js 22.12 or newer, CommonJS code can still `require()` it; you get the module namespace, so pick the export you need: `const { jsonc } = require('jsonc');`
+> Since v3 this package is ESM-only. CommonJS code can still `require()` it on Node.js 22.12 or newer (Node's `require(esm)`), and it returns `jsonc` itself as v2 did; so `const jsonc = require('jsonc')` and `const { jsonc, safe } = require('jsonc')` both work. On Node.js 22.0 – 22.11, use `import` or `await import('jsonc')`.
 
 ### Parse & Stringify
 
-`parse()` strips comments before parsing. It takes the native reviver function, or an options object.
+`parse()` strips comments before parsing. It takes the native reviver function, or an options object. Comments are replaced with whitespace, so the position in a parse error points into your original string.
 
 ```ts
 jsonc.parse('{"a":1} // one', (key, value) => (key === 'a' ? 2 : value)); // —> { a: 2 }
 jsonc.parse(str, { stripComments: false }); // throws if str has comments
+
+// trailing commas are opt-in (as in tsconfig.json)
+jsonc.parse('{ "a": [1, 2,], }', { allowTrailingCommas: true }); // —> { a: [1, 2] }
+
+// typed result (not validated at runtime)
+const config = jsonc.parse<IConfig>(str);
 ```
 
-`stringify()` supports both the native `JSON.stringify()` signature and an options object. Circular references are replaced with `"[Circular]"` unless you turn it off with `handleCircular: false`; in which case it throws like the native method.
+`stringify()` supports both the native `JSON.stringify()` signature and an options object. Circular references are replaced with `"[Circular]"` unless you turn it off with `handleCircular: false`; in which case it throws like the native method. Anything else the native method throws for (a `BigInt`, a throwing `toJSON()`, etc…) is thrown as well.
 
 ```ts
 jsonc.stringify(obj, null, 2);
@@ -103,10 +112,10 @@ jsonc.normalize(new SomeClass());        // —> plain object
 
 ### Read & Write Files
 
-`read()` strips the UTF-8 BOM and comments, then parses. `write()` stringifies with a trailing newline and creates missing parent directories (unless `autoPath` is `false`).
+`read()` strips the UTF-8 BOM and comments, then parses; it takes the same `allowTrailingCommas` option. `write()` stringifies the same way `stringify()` does (circular references included, unless `handleCircular` is `false`), adds a trailing newline and creates missing parent directories (unless `autoPath` is `false`).
 
 ```ts
-const config = await jsonc.read('path/to/config.json');
+const config = await jsonc.read<IConfig>('path/to/config.json');
 await jsonc.write('path/to/out.json', config, { space: 2 });
 
 // sync versions
@@ -144,20 +153,33 @@ All methods are static; `jsonc.safe` (also the named `safe` export) holds the sa
 
 | Method | Returns | Safe version returns | Description |
 | ------ | ------- | -------------------- | ----------- |
-| `parse(str, options?)` | `any` | `[err, any]` | Parses a JSON string; comments are stripped. `options` is a reviver function or `{ reviver?, stripComments? }`. |
-| `stringify(value, options?)`<br/>`stringify(value, replacer?, space?)` | `string` | `[err, string]` | Stringifies a value. `options` is `{ replacer?, space?, handleCircular? }`; `handleCircular` defaults to `true` (the safe version always handles circular references). |
+| `parse<T>(str, options?)` | `T` (default `any`) | `[err, T]` | Parses a JSON string; comments are stripped. `options` is a reviver function or [parse options](#options). |
+| `stringify(value, options?)`<br/>`stringify(value, replacer?, space?)` | `string` | `[err, string]` | Stringifies a value. `options` are the [stringify options](#options). Throws for circular references only if `handleCircular` is `false`, and for anything the native method throws for (e.g. a `BigInt`). |
 | `isJSON(str, allowComments?)` | `boolean` | `boolean` | Whether the string is JSON with an object or array structure. `allowComments` defaults to `false`. |
 | `stripComments(str, whitespace?)` | `string` | `[err, string]` | Strips comments; or replaces them with whitespace when `whitespace` is `true`. |
 | `uglify(str)` | `string` | `[err, string]` | Removes comments and whitespace from a JSON string. |
 | `beautify(str, space?)` | `string` | `[err, string]` | Removes comments and indents a JSON string. `space` defaults to `2`. |
-| `normalize(value, replacer?)` | `any` | `[err, any]` | Stringifies and parses back a value, to plain JSON data. |
-| `read(filePath, options?)` | `Promise<any>` | `Promise<[err, any]>` | Reads and parses a JSON file. `options` is `{ reviver?, stripComments? }`. |
-| `readSync(filePath, options?)` | `any` | `[err, any]` | Sync version of `read()`. |
-| `write(filePath, data, options?)` | `Promise<true>` | `Promise<[err, true]>` | Stringifies and writes a JSON file. `options` is `{ replacer?, space?, mode?, autoPath? }`; `mode` defaults to `0o666`, `autoPath` to `true`. |
+| `normalize<T>(value, replacer?)` | `T` (default `any`) | `[err, T]` | Stringifies and parses back a value, to plain JSON data. |
+| `read<T>(filePath, options?)` | `Promise<T>` | `Promise<[err, T]>` | Reads and parses a JSON file; strips the UTF-8 BOM. `options` are the [parse options](#options). |
+| `readSync<T>(filePath, options?)` | `T` | `[err, T]` | Sync version of `read()`. |
+| `write(filePath, data, options?)` | `Promise<true>` | `Promise<[err, true]>` | Stringifies and writes a JSON file, with a trailing newline. `options` are the [write options](#options). |
 | `writeSync(filePath, data, options?)` | `true` | `[err, true]` | Sync version of `write()`. |
 | `log(...args)` | `void` | `void` | Logs the arguments as JSON. |
 | `logp(...args)` | `void` | `void` | Logs the arguments as indented JSON. |
 | `config(cfg?)` | `void` | `void` | Sets `{ stream?, streamErr? }` for the loggers. Omitted streams reset to `process.stdout` / `process.stderr`. |
+
+### Options
+
+| Option | Type | Default | Used by | Description |
+| ------ | ---- | ------- | ------- | ----------- |
+| `reviver` | `Reviver` | — | parse, read, readSync | Transforms the parsed results, as with `JSON.parse()`. |
+| `stripComments` | `boolean` | `true` | parse, read, readSync | Whether to strip comments. If `false`, comments are a parse error. |
+| `allowTrailingCommas` | `boolean` | `false` | parse, read, readSync | Whether to allow trailing commas in objects and arrays. Takes effect only when comments are stripped. |
+| `replacer` | `Replacer` | — | stringify, write, writeSync | A replacer function, or an allow-list array of property names. |
+| `space` | `string \| number` | — | stringify, write, writeSync | Indentation; a number of spaces or an indent string. |
+| `handleCircular` | `boolean` | `true` | stringify, write, writeSync | Whether to replace circular references with `"[Circular]"`. If `false`, they throw. |
+| `mode` | `number` | `0o666` | write, writeSync | File-system permission mode for a new file. |
+| `autoPath` | `boolean` | `true` | write, writeSync | Whether to create missing parent directories. |
 
 Exported types: `IParseOptions`, `IStringifyOptions`, `IReadOptions`, `IWriteOptions`, `IConfig`, `Replacer`, `Reviver`, `SafeResult<T>`.
 
@@ -167,7 +189,7 @@ Exported types: `IParseOptions`, `IStringifyOptions`, `IReadOptions`, `IWriteOpt
 
 ## Changelog
 
-See [**CHANGELOG.md**][changelog]. **v3 is ESM-only** and requires Node.js 22 or newer; the rest of the API is unchanged.
+See [**CHANGELOG.md**][changelog]. **v3 is ESM-only** and requires Node.js 22 or newer; it also changes a few behaviors (circular references in `write()`, `BigInt` in `stringify()`, parse error positions). The migration notes live there.
 
 ## Related Projects
 
