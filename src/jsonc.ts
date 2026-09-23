@@ -1,488 +1,373 @@
-/* tslint:disable:class-name no-require-imports no-default-export max-line-length interface-name max-classes-per-file max-file-line-count */
-
 // core modules
-import * as path from 'path';
+import path from 'node:path';
 
 // dep modules
-import fastSafeStringify from 'fast-safe-stringify';
-import parseJson = require('parse-json');
-import stripBOM = require('strip-bom');
-import * as stripJsonComments from 'strip-json-comments';
+import fs from 'graceful-fs';
+import parseJson from 'parse-json';
+import stripJsonComments from 'strip-json-comments';
 
 // own modules
-import { helper } from './helper';
 import {
-    IConfig, IParseOptions, IReadOptions, IStringifyOptions, IWriteOptions, Replacer, Reviver
-} from './interfaces';
-import { jsoncSafe } from './jsonc.safe';
+  fastSafeStringify,
+  getLogger,
+  getStringifyOptions,
+  isObject,
+  mkdirAsync,
+  readFileAsync,
+  stripBOM,
+  writeFileAsync
+} from './helper.js';
+import type { jsoncSafe } from './jsonc.safe.js';
+import type {
+  IConfig,
+  IParseOptions,
+  IReadOptions,
+  IStringifyOptions,
+  IWriteOptions,
+  Replacer,
+  Reviver
+} from './types.js';
 
-// constants, variables
-const { fs, mkdirp, promise } = helper;
+interface ILoggers {
+  logger: (...args: any[]) => void;
+  prettyLogger: (...args: any[]) => void;
+}
+
+function createLoggers(cfg?: IConfig | null): ILoggers {
+  const conf: Required<IConfig> = {
+    stream: process.stdout,
+    streamErr: process.stderr,
+    ...cfg
+  };
+  return {
+    logger: getLogger(conf, false),
+    prettyLogger: getLogger(conf, true)
+  };
+}
+
+function readContent(data: string, filePath: string, options?: IReadOptions): any {
+  let str = stripBOM(data);
+  if (options?.stripComments !== false) str = stripJsonComments(str);
+  return parseJson(str, options?.reviver, filePath);
+}
+
+function writeContent(data: any, options: IWriteOptions): string {
+  return `${JSON.stringify(data, options.replacer as any, options.space)}\n`;
+}
 
 /**
- *  JSON utility class that can handle comments and circular references; and
- *  other extra functionality.
- *  @class
- *  @author Onur Yıldırım <onur@cutepilot.com>
- *  @license MIT
- *  @see {@link https://github.com/onury/jsonc|GitHub Repo}
- *  @see {@link https://github.com/onury/jsonc#related-modules|Related Modules}
+ * JSON utility class that can handle comments and circular references; with other extra
+ * functionality such as reading and writing JSON files. All methods are static.
  *
- *  @example
- *  const jsonc = require('jsonc');
- *  // or
- *  import { jsonc } from 'jsonc';
+ * @example
+ * ```ts
+ * import { jsonc } from 'jsonc';
  *
- *  const result = jsonc.parse('// comments\n{ "key": "value" }');
- *  console.log(result); // { key: "value" }
+ * const result = jsonc.parse('// comments\n{ "key": "value" }');
+ * console.log(result); // { key: 'value' }
+ * ```
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: the static-class shape is the published API since v1.
 class jsonc {
+  /**
+   * Safe versions of the `jsonc` methods. These don't throw; each returns an `[err, result]` tuple
+   * instead. See {@link jsoncSafe}.
+   */
+  declare static safe: typeof jsoncSafe;
 
-    /** @private */
-    private static _: any;
+  private static _loggers: ILoggers = createLoggers();
 
-    /**
-     *  Configures `jsonc` object.
-     *
-     *  @param {IConfig} cfg - Configurations.
-     *  @param {NodeJS.WriteStream} [stream] - Stream to write logs to. This is
-     *  used with `.log()` and `.logp()` methods.
-     *  @param {NodeJS.WriteStream} [streamErr] - Stream to write error logs to.
-     *  This is used with `.log()` and `.logp()` methods.
-     *
-     *  @example
-     *  // Output logs to stdout but logs containing errors to a file.
-     *  jsonc.config({
-     *      stream: process.stdout,
-     *      streamErr: fs.createWriteStream('path/to/log.txt')
-     *  });
-     *  jsonc.log({ info: 'this is logged to console' });
-     *  jsonc.log(new Error('this is logged to file'));
-     */
-    static config(cfg: IConfig): void {
-        const conf = {
-            stream: process.stdout,
-            streamErr: process.stderr,
-            ...(cfg || {})
-        };
-        jsonc._ = {
-            logger: helper.getLogger(conf, false),
-            prettyLogger: helper.getLogger(conf, true)
-        };
+  /**
+   * Configures the `jsonc` object. Currently, this sets the streams that `log()` and `logp()`
+   * write to.
+   *
+   * @param cfg - Configuration. Omitted streams are reset to their defaults.
+   *
+   * @example
+   * ```ts
+   * // log to stdout, but logs containing errors to a file
+   * jsonc.config({
+   *   stream: process.stdout,
+   *   streamErr: fs.createWriteStream('path/to/log.txt')
+   * });
+   * jsonc.log({ info: 'this is logged to console' });
+   * jsonc.log(new Error('this is logged to file'));
+   * ```
+   */
+  static config(cfg?: IConfig | null): void {
+    jsonc._loggers = createLoggers(cfg);
+  }
+
+  /**
+   * Stringifies and logs the given arguments to the configured stream. Circular references are
+   * handled, so this won't throw. For an `Error` instance, its `stack` is logged (to the error
+   * stream) instead of the stringified object.
+   *
+   * @param args - Values to be logged.
+   *
+   * @example
+   * ```ts
+   * jsonc.log({ a: 1 }, [1, 2]); // {"a":1} [1,2]
+   * ```
+   */
+  static log(...args: any[]): void {
+    jsonc._loggers.logger(...args);
+  }
+
+  /**
+   * Pretty version of {@link jsonc.log}. Stringifies and logs the given arguments with 2-space
+   * indents.
+   *
+   * @param args - Values to be logged.
+   *
+   * @example
+   * ```ts
+   * jsonc.logp({ a: 1 });
+   * // {
+   * //   "a": 1
+   * // }
+   * ```
+   */
+  static logp(...args: any[]): void {
+    jsonc._loggers.prettyLogger(...args);
+  }
+
+  /**
+   * Parses the given JSON string into a JavaScript value. The input string can include comments.
+   *
+   * @param str - JSON string to be parsed.
+   * @param options - Either a parse options object or a reviver function.
+   * @returns The parsed value.
+   * @throws `JSONError` (from `parse-json`) if the string is not valid JSON. Comments are stripped
+   * by default, so this does not throw for comments unless `stripComments` is `false`.
+   *
+   * @example
+   * ```ts
+   * jsonc.parse('// comments\n{"success":true}\n'); // { success: true }
+   * jsonc.parse('{"a":1}', (key, value) => (key === 'a' ? 2 : value)); // { a: 2 }
+   * ```
+   */
+  static parse(str: string, options?: IParseOptions | Reviver): any {
+    const opts: IParseOptions =
+      typeof options === 'function' ? { reviver: options } : { ...options };
+    if (opts.stripComments !== false) str = stripJsonComments(str, { whitespace: false });
+    return parseJson(str, opts.reviver);
+  }
+
+  /**
+   * Outputs a JSON string from the given JavaScript value. Supports both an options object and the
+   * signature of the native `JSON.stringify()`. By default, circular references are replaced with
+   * the string `"[Circular]"`, so this does not throw for them.
+   *
+   * @param value - Value to be stringified.
+   * @param optionsOrReplacer - Stringify options, or a replacer (function or allow-list array).
+   * @param space - Indentation; takes effect when the second argument is a replacer or falsy.
+   * @returns The JSON string.
+   * @throws `TypeError` if `handleCircular` is `false` and the value has circular references; or if
+   * a getter or `toJSON()` throws. Use {@link jsoncSafe.stringify} to avoid throwing.
+   *
+   * @example
+   * ```ts
+   * const obj = { key: 'value' };
+   * jsonc.stringify(obj); // '{"key":"value"}'
+   *
+   * // pretty output with indents
+   * jsonc.stringify(obj, null, 2);
+   * // equivalent to:
+   * jsonc.stringify(obj, { space: 2 });
+   * ```
+   */
+  static stringify(
+    value: any,
+    optionsOrReplacer?: IStringifyOptions | Replacer | null,
+    space?: string | number
+  ): string {
+    const opts = getStringifyOptions(optionsOrReplacer, space);
+    return opts.handleCircular
+      ? fastSafeStringify(value, opts.replacer as any, opts.space)
+      : JSON.stringify(value, opts.replacer as any, opts.space);
+  }
+
+  /**
+   * Specifies whether the given string has a well-formed JSON structure. JSON is built on two
+   * structures: a collection of name/value pairs (object) or an ordered list of values (array). So
+   * not every JSON-parsable string is considered well-formed here; e.g. `JSON.parse('true')`
+   * succeeds but `jsonc.isJSON('true')` returns `false`.
+   *
+   * @param str - String to be validated.
+   * @param allowComments - Whether comments should be considered valid. Default: `false`
+   *
+   * @example
+   * ```ts
+   * jsonc.isJSON('{"x":1}');          // true
+   * jsonc.isJSON('true');             // false
+   * jsonc.isJSON('[1, false, null]'); // true
+   * jsonc.isJSON('string');           // false
+   * jsonc.isJSON('null');             // false
+   * ```
+   */
+  static isJSON(str: string, allowComments = false): boolean {
+    if (typeof str !== 'string') return false;
+    try {
+      const result = jsonc.parse(str, { stripComments: allowComments });
+      return isObject(result) || Array.isArray(result);
+    } catch {
+      return false;
     }
+  }
 
-    /**
-     *  Stringifies and logs the given arguments to console. This will
-     *  automatically handle circular references; so it won't throw.
-     *
-     *  If an `Error` instance is passed, it will log the `.stack` property on
-     *  the instance, without stringifying the object.
-     *
-     *  @param {...any[]} [args] - Arguments to be logged.
-     *  @returns {void}
-     */
-    static log(...args: any[]): void {
-        jsonc._.logger(...args);
-    }
+  /**
+   * Strips comments from the given JSON string.
+   *
+   * @param str - JSON string.
+   * @param whitespace - Whether to replace comments with whitespace instead of stripping them
+   * entirely. Default: `false`
+   * @returns The JSON string without comments.
+   *
+   * @example
+   * ```ts
+   * jsonc.stripComments('// comments\n{"key":"value"}'); // '\n{"key":"value"}'
+   * ```
+   */
+  static stripComments(str: string, whitespace = false): string {
+    return stripJsonComments(str, { whitespace });
+  }
 
-    /**
-     *  Pretty version of `log()` method. Stringifies and logs the given
-     *  arguments to console, with indents. This will automatically handle
-     *  circular references; so it won't throw.
-     *
-     *  If an `Error` instance is passed, it will log the `.stack` property on
-     *  the instance, without stringifying the object.
-     *
-     *  @param {...any[]} [args] - Arguments to be logged.
-     *  @returns {void}
-     */
-    static logp(...args: any[]): void {
-        jsonc._.prettyLogger(...args);
-    }
+  /**
+   * Uglifies (minifies) the given JSON string. Comments are removed.
+   *
+   * @param str - JSON string to be uglified.
+   * @returns The uglified JSON string.
+   *
+   * @example
+   * ```ts
+   * jsonc.uglify('{\n  // comments...\n  "key": "value"\n}'); // '{"key":"value"}'
+   * ```
+   */
+  static uglify(str: string): string {
+    return jsonc.stringify(jsonc.parse(str));
+  }
 
-    /**
-     *  Parses the given JSON string into a JavaScript object. The input string
-     *  can include comments.
-     *
-     *  @param {string} str - JSON string to be parsed.
-     *  @param {IParseOptions|Reviver} [options] - Either a parse options
-     *  object or a reviver function.
-     *  @param {Reviver} [options.reviver] - A function that can filter
-     *  and transform the results. It receives each of the keys and values, and
-     *  its return value is used instead of the original value. If it returns
-     *  what it received, then the structure is not modified. If it returns
-     *  `undefined` then the member is deleted.
-     *  @param {Boolean} [options.stripComments=true] - Whether to strip
-     *  comments from the JSON string. Note that it will throw if this is set to
-     *  `false` and the string includes comments.
-     *
-     *  @returns {any} - Parsed value.
-     *
-     *  @throws {JSONError} - If JSON string is not valid. Note that any
-     *  comments within JSON are removed by default; so this will not throw for
-     *  comments unless you explicitly set `stripComments` to `false`.
-     *
-     *  @example
-     *  const parsed = jsonc.parse('// comments\n{"success":true}\n');
-     *  console.log(parsed); // { success: true }
-     */
-    static parse(str: string, options ?: IParseOptions | Reviver): any {
-        const opts: IParseOptions = typeof options === 'function'
-            ? { reviver: options }
-            : (options || {});
-        if (opts.stripComments !== false) str = stripJsonComments(str, { whitespace: false });
-        return parseJson(str, opts.reviver);
-    }
+  /**
+   * Beautifies the given JSON string. Comments are removed.
+   *
+   * @param str - JSON string to be beautified.
+   * @param space - Indentation; a number of spaces or an indent string. A falsy value falls back to
+   * the default. Default: `2`
+   * @returns The beautified JSON string.
+   *
+   * @example
+   * ```ts
+   * jsonc.beautify('{"key":"value"}');
+   * // {
+   * //   "key": "value"
+   * // }
+   * ```
+   */
+  static beautify(str: string, space: string | number = 2): string {
+    if (!space) space = 2;
+    return jsonc.stringify(jsonc.parse(str), { space });
+  }
 
-    /**
-     *  Outputs a JSON string from the given JavaScript object.
-     *
-     *  @param {*} value - JavaScript value to be stringified.
-     *  @param {IStringifyOptions|Replacer} [options] - Stringify options or a
-     *  replacer.
-     *  @param {Replacer} [options.replacer] - Determines how object values are
-     *  stringified for objects. It can be a function or an array of strings or
-     *  numbers.
-     *  @param {string|number} [options.space] - Specifies the indentation of
-     *  nested structures. If it is omitted, the text will be packed without
-     *  extra whitespace. If it is a number, it will specify the number of
-     *  spaces to indent at each level. If it is a string (such as `"\t"` or
-     *  `"&nbsp;"`), it contains the characters used to indent at each level.
-     *  @param {string|number} [space] - This takes effect if second argument is
-     *  the `replacer` or a falsy value. This is for supporting the signature of
-     *  native `JSON.stringify()` method.
-     *  @param {boolean} [options.handleCircular=true] - Whether to handle
-     *  circular references (if any) by replacing their values with the string
-     *  `"[Circular]"`. You can also use a replacer function to replace or
-     *  remove circular references instead.
-     *
-     *  @returns {string} - JSON string.
-     *
-     *  @throws {Error} - If there are any circular references within the
-     *  original input. In this case, use `jsonc.safe.stringify()` method
-     *  instead.
-     *
-     *  @example
-     *  const obj = { key: 'value' };
-     *  console.log(jsonc.stringify(obj)); // '{"key":"value"}'
-     *
-     *  // pretty output with indents
-     *  let pretty = jsonc.stringify(obj, null, 2);
-     *  // equivalent to:
-     *  pretty = jsonc.stringify(obj, { reviver: null, space: 2 });
-     *  if (!err) console.log(pretty);
-     *  // {
-     *  //   "key": "value"
-     *  // }
-     */
-    static stringify(value: any, optionsOrReplacer?: IStringifyOptions | Replacer, space?: string | number): string {
-        const opts = helper.getStringifyOptions(optionsOrReplacer, space);
-        return opts.handleCircular
-            ? fastSafeStringify(value, opts.replacer, opts.space)
-            : JSON.stringify(value, opts.replacer, opts.space);
-    }
+  /**
+   * Normalizes the given value by stringifying it and parsing it back to plain JSON data. Class
+   * instances become plain objects; circular references become `"[Circular]"`.
+   *
+   * @param value - Value to be normalized.
+   * @param replacer - Determines how object values are normalized.
+   * @returns The normalized value.
+   *
+   * @example
+   * ```ts
+   * const c = new SomeClass();
+   * c.constructor.name;                   // 'SomeClass'
+   * jsonc.normalize(c).constructor.name;  // 'Object'
+   * ```
+   */
+  static normalize(value: any, replacer?: Replacer | null): any {
+    return jsonc.parse(jsonc.stringify(value, { replacer }));
+  }
 
-    /**
-     *  Specifies whether the given string has well-formed JSON structure.
-     *
-     *  Note that, not all JSON-parsable strings are considered well-formed JSON
-     *  structures. JSON is built on two structures; a collection of name/value
-     *  pairs (object) or an ordered list of values (array).
-     *
-     *  For example, `JSON.parse('true')` will parse successfully but
-     *  `jsonc.isJSON('true')` will return `false` since it has no object or
-     *  array structure.
-     *
-     *  @param {string} str - String to be validated.
-     *  @param {boolean} [allowComments=false] - Whether comments should be
-     *  considered valid.
-     *
-     *  @returns {boolean}
-     *
-     *  @example
-     *  jsonc.isJSON('{"x":1}');            // true
-     *  jsonc.isJSON('true');               // false
-     *  jsonc.isJSON('[1, false, null]');   // true
-     *  jsonc.isJSON('string');             // false
-     *  jsonc.isJSON('null');               // false
-     */
-    static isJSON(str: string, allowComments: boolean = false): boolean {
-        if (typeof str !== 'string') return false;
-        const [err, result] = jsonc.safe.parse(str, { stripComments: allowComments });
-        return !err && (helper.isObject(result) || Array.isArray(result));
-    }
+  /**
+   * Asynchronously reads a JSON file, strips the UTF-8 BOM and comments, and parses the content.
+   *
+   * @param filePath - Path to the JSON file.
+   * @param options - Read options.
+   * @returns A promise of the parsed content.
+   *
+   * @example
+   * ```ts
+   * try {
+   *   const obj = await jsonc.read('path/to/file.json');
+   * } catch (err) {
+   *   console.log('Failed to read JSON file');
+   * }
+   * ```
+   */
+  static async read(filePath: string, options?: IReadOptions): Promise<any> {
+    const data = await readFileAsync(filePath, 'utf8');
+    return readContent(data, filePath, options);
+  }
 
-    /**
-     *  Strips comments from the given JSON string.
-     *
-     *  @param {string} str - JSON string.
-     *  @param {boolean} [whitespace=false] - Whether to replace comments with
-     *  whitespace instead of stripping them entirely.
-     *
-     *  @returns {string} - Valid JSON string.
-     *
-     *  @example
-     *  const str = jsonc.stripComments('// comments\n{"key":"value"}');
-     *  console.log(str); // '\n{"key":"value"}'
-     */
-    static stripComments(str: string, whitespace: boolean = false): string {
-        return stripJsonComments(str, { whitespace });
-    }
+  /**
+   * Synchronously reads a JSON file, strips the UTF-8 BOM and comments, and parses the content.
+   *
+   * @param filePath - Path to the JSON file.
+   * @param options - Read options.
+   * @returns The parsed content.
+   *
+   * @example
+   * ```ts
+   * // throws on failure; use jsonc.safe.readSync() to avoid try/catch
+   * const obj = jsonc.readSync('path/to/file.json');
+   * ```
+   */
+  static readSync(filePath: string, options?: IReadOptions): any {
+    return readContent(fs.readFileSync(filePath, 'utf8'), filePath, options);
+  }
 
-    /**
-     *  Uglifies the given JSON string.
-     *
-     *  @param {string} str - JSON string to be uglified.
-     *  @returns {string} - Uglified JSON string.
-     *
-     *  @example
-     *  const pretty = `
-     *  {
-     *    // comments...
-     *    "key": "value"
-     *  }
-     *  `;
-     *  const ugly = jsonc.uglify(pretty);
-     *  console.log(ugly); // '{"key":"value"}'
-     */
-    static uglify(str: string): string {
-        return jsonc.stringify(jsonc.parse(str, { stripComments: true }));
-    }
+  /**
+   * Asynchronously stringifies the given value and writes it to a JSON file (with a trailing
+   * newline). Parent directories are created by default.
+   *
+   * @param filePath - Path to the JSON file to be written.
+   * @param data - Value to be stringified into JSON.
+   * @param options - Write options.
+   * @returns A promise that resolves with `true` when written.
+   *
+   * @example
+   * ```ts
+   * await jsonc.write('path/to/file.json', { key: 'value' }, { space: 2 });
+   * ```
+   */
+  static async write(filePath: string, data: any, options?: IWriteOptions): Promise<boolean> {
+    const opts: IWriteOptions = { mode: 0o666, autoPath: true, ...options };
+    if (opts.autoPath) await mkdirAsync(path.dirname(filePath), { recursive: true });
+    await writeFileAsync(filePath, writeContent(data, opts), { mode: opts.mode });
+    return true;
+  }
 
-    /**
-     *  Beautifies the given JSON string. Note that this will remove comments,
-     *  if any.
-     *
-     *  @param {string} str - JSON string to be beautified.
-     *  @param {string|number} [space=2] Specifies the indentation of nested
-     *  structures. If it is omitted, the text will be packed without extra
-     *  whitespace. If it is a number, it will specify the number of spaces to
-     *  indent at each level. If it is a string (such as "\t" or "&nbsp;"), it
-     *  contains the characters used to indent at each level.
-     *
-     *  @returns {string} - Beautified JSON string.
-     *
-     *  @example
-     *  const ugly = '{"key":"value"}';
-     *  const pretty = jsonc.beautify(ugly);
-     *  console.log(pretty);
-     *  // {
-     *  //   "key": "value"
-     *  // }
-     */
-    static beautify(str: string, space: string | number = 2): string {
-        if (!space) space = 2;
-        return jsonc.stringify(jsonc.parse(str), { space });
-    }
-
-    /**
-     *  Normalizes the given value by stringifying and parsing it back to a
-     *  Javascript object.
-     *
-     *  @param {any} value
-     *  @param {Replacer} [replacer] - Determines how object values are
-     *  normalized for objects. It can be a function or an array of strings.
-     *
-     *  @returns {any} - Normalized object.
-     *
-     *  @example
-     *  const c = new SomeClass();
-     *  console.log(c.constructor.name); // "SomeClass"
-     *  const normalized = jsonc.normalize(c);
-     *  console.log(normalized.constructor.name); // "Object"
-     */
-    static normalize(value: any, replacer?: Replacer): any {
-        return jsonc.parse(jsonc.stringify(value, { replacer }));
-    }
-
-    /**
-     *  Asynchronously reads a JSON file, strips comments and UTF-8 BOM and
-     *  parses the JSON content.
-     *
-     *  @param {string} filePath - Path to JSON file.
-     *  @param {Function|IReadOptions} [options] - Read options.
-     *  @param {Function} [options.reviver] - A function that can filter and
-     *  transform the results. It receives each of the keys and values, and its
-     *  return value is used instead of the original value. If it returns what
-     *  it received, then the structure is not modified. If it returns undefined
-     *  then the member is deleted.
-     *  @param {boolean} [options.stripComments=true] - Whether to strip
-     *  comments from the JSON string. Note that it will throw if this is set to
-     *  `false` and the string includes comments.
-     *
-     *  @returns {Promise<any>} - Promise of the parsed JSON content as a
-     *  JavaScript object.
-     *
-     *  @example <caption>Using async/await</caption> (async () => {try {const
-     *  obj = await jsonc.read('path/to/file.json'); console.log(typeof obj); //
-     *  "object"} catch (err) {console.log('Failed to read JSON file');
-     *      }
-     *  })();
-     *
-     *  @example <caption>Using promises</caption>
-     *  jsonc.read('path/to/file.json') .then(obj => {console.log(typeof obj);
-     *  // "object"
-     *      })
-     *      .catch(err => {
-     *          console.log('Failed to read JSON file');
-     *      });
-     */
-    static async read(filePath: string, options?: IReadOptions): Promise<any> {
-        const opts: IReadOptions = {
-            reviver: null,
-            stripComments: true,
-            ...(options || {})
-        };
-        let data: string = await promise.readFile(filePath, 'utf8');
-        if (opts.stripComments !== false) data = stripJsonComments(data);
-        return parseJson(stripBOM(data), opts.reviver, filePath);
-    }
-
-    /**
-     *  Synchronously reads a JSON file, strips UTF-8 BOM and parses the JSON
-     *  content.
-     *
-     *  @param {string} filePath - Path to JSON file.
-     *  @param {Function|IReadOptions} [options] - Read options.
-     *  @param {Function} [options.reviver] - A function that can filter and
-     *  transform the results. It receives each of the keys and values, and its
-     *  return value is used instead of the original value. If it returns what
-     *  it received, then the structure is not modified. If it returns undefined
-     *  then the member is deleted.
-     *  @param {boolean} [options.stripComments=true] - Whether to strip
-     *  comments from the JSON string. Note that it will throw if this is set to
-     *  `false` and the string includes comments.
-     *
-     *  @returns {any} - Parsed JSON content as a JavaScript object.
-     *
-     *  @example
-     *  const obj = jsonc.readSync('path/to/file.json');
-     *  // use try/catch block to handle errors. or better, use the safe version.
-     *  console.log(typeof obj); // "object"
-     */
-    static readSync(filePath: string, options?: IReadOptions): any {
-        const opts: IReadOptions = {
-            reviver: null,
-            stripComments: true,
-            ...(options || {})
-        };
-        let data: string = fs.readFileSync(filePath, 'utf8');
-        if (opts.stripComments !== false) data = stripJsonComments(data);
-        return parseJson(stripBOM(data), opts.reviver, filePath);
-    }
-
-    /**
-     *  Asynchronously writes a JSON file from the given JavaScript object.
-     *
-     *  @param {string} filePath - Path to JSON file to be written.
-     *  @param {any} data - Data to be stringified into JSON.
-     *  @param {IWriteOptions} [options] - Write options.
-     *  @param {Replacer} [options.replacer] - Determines how object values are
-     *  stringified for objects. It can be a function or an array of strings.
-     *  @param {string|number} [options.space] - Specifies the indentation of
-     *  nested structures. If it is omitted, the text will be packed without
-     *  extra whitespace. If it is a number, it will specify the number of
-     *  spaces to indent at each level. If it is a string (such as "\t" or
-     *  "&nbsp;"), it contains the characters used to indent at each level.
-     *  @param {number} [options.mode=438] - FileSystem permission mode to be used when
-     *  writing the file. Default is `438` (`0666` in octal).
-     *  @param {boolean} [options.autoPath=true] - Specifies whether to create path
-     *  directories if they don't exist. This will throw if set to `false` and
-     *  path does not exist.
-     *
-     *  @returns {Promise<boolean>} - Always resolves with `true`, if no errors occur.
-     *
-     *  @example <caption>Using async/await</caption>
-     *  (async () => {
-     *      try {
-     *          await jsonc.write('path/to/file.json', data);
-     *          console.log('Successfully wrote JSON file');
-     *      } catch (err) {
-     *          console.log('Failed to write JSON file');
-     *      }
-     *  })();
-     *
-     *  @example <caption>Using promises</caption>
-     *  jsonc.write('path/to/file.json', data)
-     *      .then(success => {
-     *           console.log('Successfully wrote JSON file');
-     *      })
-     *      .catch(err => {
-     *          console.log('Failed to write JSON file');
-     *      });
-     */
-    static async write(filePath: string, data: any, options?: IWriteOptions): Promise<boolean> {
-        const opts: IWriteOptions = {
-            replacer: null,
-            space: 0,
-            mode: 438,
-            autoPath: true,
-            ...(options || {})
-        };
-
-        if (opts.autoPath) await promise.mkdirp(path.dirname(filePath), { fs });
-        const content = JSON.stringify(data, opts.replacer, opts.space);
-        await promise.writeFile(filePath, `${content}\n`, {
-            mode: opts.mode,
-            encoding: 'utf8'
-        });
-        return true;
-    }
-
-    /**
-     *  Synchronously writes a JSON file from the given JavaScript object.
-     *
-     *  @param {string} filePath - Path to JSON file to be written.
-     *  @param {any} data - Data to be stringified into JSON.
-     *  @param {IWriteOptions} [options] - Write options.
-     *  @param {Replacer} [options.replacer] - Determines how object values are
-     *  stringified for objects. It can be a function or an array of strings.
-     *  @param {string|number} [options.space] - Specifies the indentation of
-     *  nested structures. If it is omitted, the text will be packed without
-     *  extra whitespace. If it is a number, it will specify the number of
-     *  spaces to indent at each level. If it is a string (such as "\t" or
-     *  "&nbsp;"), it contains the characters used to indent at each level.
-     *  @param {number} [options.mode=438] - FileSystem permission mode to be used when
-     *  writing the file. Default is `438` (`0666` in octal).
-     *  @param {boolean} [options.autoPath=true] - Specifies whether to create path
-     *  directories if they don't exist. This will throw if set to `false` and
-     *  path does not exist.
-     *
-     *  @returns {boolean} - Always returns `true`, if no errors occur.
-     *
-     *  @example
-     *  const success = jsonc.writeSync('path/to/file.json');
-     *  // this will always return true. use try/catch block to handle errors. or better, use the safe version.
-     *  console.log('Successfully wrote JSON file');
-     */
-    static writeSync(filePath: string, data: any, options?: IWriteOptions): boolean {
-        const opts: IWriteOptions = {
-            replacer: null,
-            space: 0,
-            mode: 438,
-            autoPath: true,
-            ...(options || {})
-        };
-
-        if (opts.autoPath) mkdirp.sync(path.dirname(filePath), { fs });
-        const content = JSON.stringify(data, opts.replacer, opts.space);
-        fs.writeFileSync(filePath, `${content}\n`, {
-            mode: opts.mode,
-            encoding: 'utf8'
-        });
-        return true;
-    }
-
+  /**
+   * Synchronously stringifies the given value and writes it to a JSON file (with a trailing
+   * newline). Parent directories are created by default.
+   *
+   * @param filePath - Path to the JSON file to be written.
+   * @param data - Value to be stringified into JSON.
+   * @param options - Write options.
+   * @returns `true` when written.
+   *
+   * @example
+   * ```ts
+   * // throws on failure; use jsonc.safe.writeSync() to avoid try/catch
+   * jsonc.writeSync('path/to/file.json', { key: 'value' });
+   * ```
+   */
+  static writeSync(filePath: string, data: any, options?: IWriteOptions): boolean {
+    const opts: IWriteOptions = { mode: 0o666, autoPath: true, ...options };
+    if (opts.autoPath) fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, writeContent(data, opts), { mode: opts.mode });
+    return true;
+  }
 }
-
-// default configuration
-jsonc.config(null);
-
-/* istanbul ignore next */
-namespace jsonc {
-    export const safe = jsoncSafe;
-}
-
-// Export
 
 export { jsonc };

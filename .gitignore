@@ -1,15 +1,21 @@
-/backup/
-/wiki/
-/node_modules/
-/backup/
-/test/coverage/
-/test/tmp/
-src*.zip
+node_modules
+package-lock.json
+lib
+coverage
+test/coverage
+test/stryker
+test/tmp
+.stryker-tmp
+*.tsbuildinfo
+npm-debug.log
+backup
+_backup/
+wiki
+tmp
 TODO.md
 ignore*.*
-
-# Scratch / temp — never committed
-_backup/
+.vscode/
+.DS_Store
 
 # ---- Author's working notes: planning, specs, working agreements ----
 _notes/

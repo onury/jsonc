@@ -1,120 +1,80 @@
+// core modules
+import { promisify } from 'node:util';
+
 // dep modules
-import fastSafeStringify from 'fast-safe-stringify';
-import * as fs from 'graceful-fs';
-import * as mkdirp from 'mkdirp';
+import fss from 'fast-safe-stringify';
+import fs from 'graceful-fs';
 
 // own modules
-import { IConfig, IStringifyOptions, Replacer } from './interfaces';
+import type { IConfig, IStringifyOptions, Replacer, SafeResult } from './types.js';
 
-// vars
-const oproto = Object.prototype;
+// Internal helpers; not part of the public API.
 
-// simple promisification. this won't work for callbacks with more than 2
-// args.
-function promisify(fn: Function): any {
-    return (...args) => {
-        return new Promise((resolve, reject) => {
-            fn(...args, (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            });
-        });
-    };
-}
+/** `fast-safe-stringify` is CommonJS; its typings expose the function as `.default`. */
+export const fastSafeStringify = fss.default;
+
+export const readFileAsync = promisify(fs.readFile);
+export const writeFileAsync = promisify(fs.writeFile);
+export const mkdirAsync = promisify(fs.mkdir);
 
 const defaultStringifyOpts: IStringifyOptions = {
-    replacer: null,
-    space: 0,
-    handleCircular: true
+  replacer: null,
+  space: 0,
+  handleCircular: true
 };
 
-const helper = {
+export function isObject(o: any): boolean {
+  return Object.prototype.toString.call(o) === '[object Object]';
+}
 
-    isObject(o: any): boolean {
-        return oproto.toString.call(o) === '[object Object]';
-    },
+export function stripBOM(str: string): string {
+  return str.charCodeAt(0) === 0xfeff ? str.slice(1) : str;
+}
 
-    isPrimitive(value: any): boolean {
-        const t = typeof value;
-        return value === null
-            || value === undefined
-            || (t !== 'function' && t !== 'object');
-    },
+export function strLog(value: any, pretty: boolean): string {
+  const t = typeof value;
+  if (t !== 'object' && t !== 'function') return value;
+  return fastSafeStringify(value, undefined, pretty ? 2 : undefined);
+}
 
-    strLog(value: any, pretty: boolean): string {
-        if (helper.isPrimitive(value)) return value;
-        const s = pretty ? '  ' : null;
-        return fastSafeStringify(value, null, s);
-    },
-
-    getLogger(config: IConfig, pretty: boolean): Function {
-        return (...args: any[]): void => {
-            let stream = config.stream;
-            const msg: string = args.map(arg => {
-                if (arg instanceof Error) {
-                    stream = config.streamErr;
-                    return arg.stack
-                        /* istanbul ignore next */
-                        || arg.message
-                        /* istanbul ignore next */
-                        || String(arg);
-                }
-                return helper.strLog(arg, pretty);
-            }).join(' ');
-            stream.write(msg + '\n');
-        };
-    },
-
-    getStringifyOptions(options: IStringifyOptions | Replacer, space: string | number): IStringifyOptions {
-        if (helper.isObject(options)) {
-            return {
-                ...defaultStringifyOpts,
-                ...options
-            }; // as IStringifyOptions
+export function getLogger(config: Required<IConfig>, pretty: boolean): (...args: any[]) => void {
+  return (...args: any[]): void => {
+    let stream = config.stream;
+    const msg = args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          stream = config.streamErr;
+          return arg.stack || arg.message || String(arg);
         }
+        return strLog(arg, pretty);
+      })
+      .join(' ');
+    stream.write(`${msg}\n`);
+  };
+}
 
-        if (typeof options === 'function' || Array.isArray(options)) {
-            return {
-                ...defaultStringifyOpts,
-                replacer: options as Replacer,
-                space
-            };
-        }
+export function getStringifyOptions(
+  options?: IStringifyOptions | Replacer | null,
+  space?: string | number
+): IStringifyOptions {
+  if (isObject(options)) return { ...defaultStringifyOpts, ...(options as IStringifyOptions) };
+  // anything else is the replacer of the native signature; JSON.stringify ignores invalid ones.
+  return { ...defaultStringifyOpts, replacer: options as Replacer | null, space };
+}
 
-        return {
-            ...defaultStringifyOpts,
-            space
-        };
-    },
-
-    fs,
-    mkdirp,
-
-    promise: {
-        readFile: promisify(fs.readFile),
-        writeFile: promisify(fs.writeFile),
-        mkdirp: promisify(mkdirp)
-    },
-
-    safeSync<T, U = any>(fn: (...args: any[]) => T): (...args: any[]) => [U | null, T | undefined] {
-        return (...args: any[]): [U | null, T | undefined] => {
-            try {
-                return [null, fn(...args) as T];
-            } catch (err) {
-                return [err, undefined] as [U, undefined];
-            }
-        };
-    },
-
-    safeAsync<T, U = any>(promise: Promise<T>): Promise<[U | null, T | undefined]> {
-        return promise
-            .then<[null, T]>((data: T) => [null, data])
-            .catch<[U, undefined]>(err => [err, undefined]);
+export function safeSync<A extends any[], T>(fn: (...args: A) => T): (...args: A) => SafeResult<T> {
+  return (...args: A): SafeResult<T> => {
+    try {
+      return [null, fn(...args)];
+    } catch (err) {
+      return [err as Error, undefined];
     }
+  };
+}
 
-};
-
-export { helper };
+export function safeAsync<T>(promise: Promise<T>): Promise<SafeResult<T>> {
+  return promise.then(
+    (data): SafeResult<T> => [null, data],
+    (err): SafeResult<T> => [err as Error, undefined]
+  );
+}
