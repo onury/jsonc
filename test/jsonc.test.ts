@@ -9,7 +9,6 @@ import jsoncDefault, {
   type IReadOptions,
   type IWriteOptions,
   jsonc,
-  jsoncSafe,
   safe
 } from '../src/index.js';
 
@@ -49,10 +48,14 @@ afterEach(() => {
 });
 
 describe('exports', () => {
-  test('named, default and safe exports', () => {
+  test('named, default and safe exports', async () => {
     expect(jsoncDefault).toBe(jsonc);
-    expect(jsonc.safe).toBe(jsoncSafe);
-    expect(safe).toBe(jsoncSafe);
+    expect(jsonc.safe).toBe(safe);
+    expect(Object.keys(await import('../src/index.js')).sort()).toEqual([
+      'default',
+      'jsonc',
+      'safe'
+    ]);
   });
 });
 
