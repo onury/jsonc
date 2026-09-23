@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](http://semver.org).
 
-## [3.0.0] - 2026-09-24
+## 3.0.0 (2026-09-24)
 
 > **Breaking release!..** ESM-only, Node.js 22+, and a few behavior changes; see **Changed**. The method names and signatures are the same as v2.
 
