@@ -117,6 +117,30 @@ describe('jsonc.stringify()', () => {
   });
 });
 
+describe('jsonc.stringify() errors', () => {
+  test('throws for BigInt instead of returning a placeholder', () => {
+    expect(() => jsonc.stringify(1n)).toThrow(TypeError);
+    expect(() => jsonc.stringify({ a: 1n })).toThrow(/BigInt/);
+    expect(() => jsonc.stringify({ a: 1n }, { handleCircular: false })).toThrow(/BigInt/);
+    expect(() => jsonc.normalize({ a: 1n })).toThrow(TypeError);
+  });
+
+  test('rethrows what toJSON() throws', () => {
+    const o = {
+      toJSON() {
+        throw new RangeError('toJSON failed');
+      }
+    };
+    expect(() => jsonc.stringify(o)).toThrow(RangeError);
+  });
+
+  test('a string equal to the placeholder text still stringifies', () => {
+    const text = '[unable to serialize, circular reference is too complex to analyze]';
+    expect(jsonc.stringify(text)).toBe(JSON.stringify(text));
+    expect(jsonc.stringify({ text, self: null })).toBe(JSON.stringify({ text, self: null }));
+  });
+});
+
 describe('jsonc.isJSON()', () => {
   test('validates structure', () => {
     expect(jsonc.isJSON(5 as any)).toBe(false);
@@ -350,6 +374,8 @@ describe('jsonc.safe', () => {
         throw new Error('getter');
       }
     };
+    const [bErr] = safe.stringify({ a: 1n });
+    expect(bErr).toBeInstanceOf(TypeError);
     const [err, str] = safe.stringify(throwing);
     expect(err).toBeInstanceOf(Error);
     expect(str).toBeUndefined();

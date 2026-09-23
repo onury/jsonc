@@ -11,7 +11,21 @@ import type { IConfig, IStringifyOptions, Replacer, SafeResult } from './types.j
 // Internal helpers; not part of the public API.
 
 /** `fast-safe-stringify` is CommonJS; its typings expose the function as `.default`. */
-export const fastSafeStringify = fss.default;
+const fastSafeStringify = fss.default;
+
+// fast-safe-stringify swallows whatever JSON.stringify() throws (a BigInt, a throwing `toJSON()`,
+// etc…) and returns this placeholder instead.
+const UNSERIALIZABLE = '"[unable to serialize, circular reference is too complex to analyze]"';
+
+/**
+ * Stringifies with circular references replaced by `"[Circular]"`, but lets any other
+ * serialization error surface (native `JSON.stringify()` rethrows it) instead of returning the
+ * fast-safe-stringify placeholder.
+ */
+export function circularStringify(value: any, replacer?: any, space?: string | number): string {
+  const out = fastSafeStringify(value, replacer, space);
+  return out === UNSERIALIZABLE ? JSON.stringify(value, replacer, space) : out;
+}
 
 export const readFileAsync = promisify(fs.readFile);
 export const writeFileAsync = promisify(fs.writeFile);

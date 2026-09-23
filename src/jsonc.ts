@@ -8,7 +8,7 @@ import stripJsonComments from 'strip-json-comments';
 
 // own modules
 import {
-  fastSafeStringify,
+  circularStringify,
   getLogger,
   getStringifyOptions,
   isObject,
@@ -170,8 +170,8 @@ class jsonc {
    * @param optionsOrReplacer - Stringify options, or a replacer (function or allow-list array).
    * @param space - Indentation; takes effect when the second argument is a replacer or falsy.
    * @returns The JSON string.
-   * @throws `TypeError` if `handleCircular` is `false` and the value has circular references; or if
-   * a getter or `toJSON()` throws. Use {@link jsoncSafe.stringify} to avoid throwing.
+   * @throws `TypeError` if the value holds a `BigInt`, or has circular references while
+   * `handleCircular` is `false`. Also rethrows anything a getter, `toJSON()` or the replacer throws. Use {@link jsoncSafe.stringify} to avoid throwing.
    *
    * @example
    * ```ts
@@ -191,7 +191,7 @@ class jsonc {
   ): string {
     const opts = getStringifyOptions(optionsOrReplacer, space);
     return opts.handleCircular !== false
-      ? fastSafeStringify(value, opts.replacer as any, opts.space)
+      ? circularStringify(value, opts.replacer, opts.space)
       : JSON.stringify(value, opts.replacer as any, opts.space);
   }
 
