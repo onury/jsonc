@@ -65,4 +65,3 @@ All notable changes to this project will be documented in this file. The format 
 
 - Initial release.
 
-[3.0.0]:https://github.com/onury/jsonc/compare/v2.0.0...v3.0.0
