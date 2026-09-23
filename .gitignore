@@ -7,3 +7,9 @@
 src*.zip
 TODO.md
 ignore*.*
+
+# Scratch / temp — never committed
+_backup/
+
+# ---- Author's working notes: planning, specs, working agreements ----
+_notes/
