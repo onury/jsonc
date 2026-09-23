@@ -20,6 +20,11 @@ export interface IParseOptions {
    * `false` and the string includes comments. Default: `true`
    */
   stripComments?: boolean;
+  /**
+   * Whether to allow trailing commas in objects and arrays (as in JSONC files such as
+   * `tsconfig.json`). Takes effect only when comments are stripped. Default: `false`
+   */
+  allowTrailingCommas?: boolean;
 }
 
 /** Options for {@link jsonc.stringify}. */

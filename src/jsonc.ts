@@ -45,10 +45,15 @@ function createLoggers(cfg?: IConfig | null): ILoggers {
   };
 }
 
-function readContent(data: string, filePath: string, options?: IReadOptions): any {
-  let str = stripBOM(data);
-  if (options?.stripComments !== false) str = stripJsonComments(str);
-  return parseJson(str, options?.reviver, filePath);
+// Comments (and trailing commas, if allowed) are replaced with whitespace, so that positions in
+// parse errors still point into the original string.
+function prepare(str: string, options: IParseOptions): string {
+  if (options.stripComments === false) return str;
+  return stripJsonComments(str, { trailingCommas: options.allowTrailingCommas });
+}
+
+function readContent(data: string, filePath: string, options: IReadOptions = {}): any {
+  return parseJson(prepare(stripBOM(data), options), options.reviver, filePath);
 }
 
 function writeContent(data: any, options: IWriteOptions): string {
@@ -153,13 +158,13 @@ class jsonc {
    * ```ts
    * jsonc.parse('// comments\n{"success":true}\n'); // { success: true }
    * jsonc.parse('{"a":1}', (key, value) => (key === 'a' ? 2 : value)); // { a: 2 }
+   * jsonc.parse('{"a":[1,2,],}', { allowTrailingCommas: true }); // { a: [1, 2] }
    * ```
    */
   static parse(str: string, options?: IParseOptions | Reviver): any {
     const opts: IParseOptions =
       typeof options === 'function' ? { reviver: options } : { ...options };
-    if (opts.stripComments !== false) str = stripJsonComments(str);
-    return parseJson(str, opts.reviver);
+    return parseJson(prepare(str, opts), opts.reviver);
   }
 
   /**

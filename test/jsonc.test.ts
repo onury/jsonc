@@ -78,6 +78,20 @@ describe('jsonc.parse()', () => {
     expect(() => jsonc.parse(src)).toThrow(/position 19 \(line 2 column 9\)/);
   });
 
+  test('allowTrailingCommas (opt-in)', () => {
+    const src = '{\n  "a": [1, 2,],\n  "b": 1, // c\n}';
+    expect(() => jsonc.parse(src)).toThrow();
+    expect(() => jsonc.parse(src, { allowTrailingCommas: false })).toThrow();
+    expect(jsonc.parse(src, { allowTrailingCommas: true })).toEqual({ a: [1, 2], b: 1 });
+    // positions still point into the source
+    expect(() => jsonc.parse('{"a":1,,}', { allowTrailingCommas: true })).toThrow(/position 7 /);
+    // no effect without comment stripping
+    expect(() =>
+      jsonc.parse('{"a":1,}', { stripComments: false, allowTrailingCommas: true })
+    ).toThrow();
+    expect(safe.parse(src, { allowTrailingCommas: true })).toEqual([null, { a: [1, 2], b: 1 }]);
+  });
+
   test('accepts a reviver function or options.reviver', () => {
     const reviver = (key: string, value: any) => (key === 'some' ? `modified ${value}` : value);
     expect(jsonc.parse(withComments, reviver).some).toBe('modified property');
@@ -272,6 +286,17 @@ describe('file I/O', () => {
     fs.writeFileSync(file, '{"a":1}');
     expect(await jsonc.read(file)).toEqual({ a: 1 });
     expect(jsonc.readSync(file)).toEqual({ a: 1 });
+  });
+
+  test('read() / readSync() allowTrailingCommas', async () => {
+    const file = path.join(tmpDir, 'tc.json');
+    fs.writeFileSync(file, '{"a":[1,],}');
+    await expect(jsonc.read(file)).rejects.toThrow(file);
+    expect(() => jsonc.readSync(file)).toThrow(file);
+    expect(await jsonc.read(file, { allowTrailingCommas: true })).toEqual({ a: [1] });
+    expect(jsonc.readSync(file, { allowTrailingCommas: true })).toEqual({ a: [1] });
+    expect(await safe.read(file, { allowTrailingCommas: true })).toEqual([null, { a: [1] }]);
+    expect(safe.readSync(file, { allowTrailingCommas: true })).toEqual([null, { a: [1] }]);
   });
 
   test('read() / readSync() options', async () => {
